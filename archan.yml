@@ -1,54 +1,59 @@
-analyzers:
-# a first analyzer with one provider and several checker
-- name: My first analyzer
-  description: Optional description
-  providers: dependenpy.InternalDependencies
-  checkers:
-    - archan.CompleteMediation
-    - archan.EconomyOfMechanism:
-        allow_failure: true
-        arguments:
-          simplicity_factor: 2
-    - archan.LayeredArchitecture
-    - archan.LeastCommonMechanism:
-        allow_failure: true
-        arguments:
-          independence_factor: 5
-# a second analyzer with several providers and one checker
-- name: My second analyzer
-  providers:
-  - archan_pylint.PylintProvider
-  checkers:
-    archan.CodeClean:
-      allow_failure: true
-      arguments:
-        threshold: 10
-# a third analyzer, using its name directly
-  Open Design:
-    Source Code: true
-
-
-#analysis:
-#  archan_pylint.PylintProvider:
-#    name: Pylint
-#    checkers:
-#      archan.CodeClean:
+#analyzers:
+## a first analyzer with one provider and several checker
+#- name: My first analyzer
+#  description: Optional description
+#  providers: dependenpy.InternalDependencies
+#  checkers:
+#    - archan.CompleteMediation
+#    - archan.EconomyOfMechanism:
 #        allow_failure: true
 #        arguments:
-#          threshold: 10
-#  dependenpy.InternalDependencies:
-#    name: Software Architecture
-#    arguments:
-#    checkers:
-#      - archan.CompleteMediation
-#      - archan.EconomyOfMechanism:
-#          allow_failure: true
-#          arguments:
-#            simplicity_factor: 2
-#      - archan.LayeredArchitecture
-#      - archan.LeastCommonMechanism:
-#          allow_failure: true
-#          arguments:
-#            independence_factor: 5
+#          simplicity_factor: 2
+#    - archan.LayeredArchitecture
+#    - archan.LeastCommonMechanism:
+#        allow_failure: true
+#        arguments:
+#          independence_factor: 5
+## a second analyzer with several providers and one checker
+#- name: My second analyzer
+#  providers:
+#  - archan_pylint.PylintProvider
+#  checkers:
+#    archan.CodeClean:
+#      allow_failure: true
+#      arguments:
+#        threshold: 10
+## a third analyzer, using its name directly
 #  Open Design:
 #    Source Code: true
+
+
+analysis:
+  archan_pylint.PylintProvider:
+    name: Pylint
+    arguments:
+      pylint_args:
+        - src/archan
+    checkers:
+      archan.CodeClean:
+        allow_failure: true
+        arguments:
+          threshold: 10
+  dependenpy.InternalDependencies:
+    name: Software Architecture
+    arguments:
+      packages:
+        - src/archan
+    checkers:
+      - archan.CompleteMediation
+      - archan.EconomyOfMechanism:
+          allow_failure: true
+          arguments:
+            simplicity_factor: 2
+      - archan.LayeredArchitecture
+      - archan.LeastCommonMechanism:
+          allow_failure: true
+          arguments:
+            independence_factor: 5
+  Open Design:
+    Source Code: true
