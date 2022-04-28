@@ -1,13 +1,13 @@
 #default_stages: [commit, push]
 repos:
-#-   repo: local
-#    hooks:
-#    -   id: mypy and
-#        name: my_tsting
-#        entry: "mypy ." & "darglint ."
-#        language: python
-#        types: [python]
-
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+    -   id: check-ast
+    -   id: check-json
+    -   id: check-toml
+    -   id: check-yaml
+    -   id: check-json
 -   repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:
@@ -22,6 +22,7 @@ repos:
                 "flake8-requirements",
                 "flake8-aaa",
                 "flake8-noqa",
+                "flake8-functions"
 #                "flake8-sql",
         ]
 
@@ -30,12 +31,20 @@ repos:
     hooks:
     -   id: mypy
         name: Compliance with mypy coding rules (maintainability-check)
+#        args: [--disallow-untyped-defs=True, --disallow-incomplete-defs=True, --check-untyped-defs=True]
 
 -   repo: https://github.com/terrencepreilly/darglint
     rev: master
     hooks:
     -   id: darglint
         name: Compliance with darglint coding rules (maintainability-check)
+#        args: [--strictness=full, --docstring_style=sphinx]
+
+-   repo: https://github.com/regebro/pyroma
+    rev: "3.2"
+    hooks:
+    -   id: pyroma
+        name: Compliance with pyroma rules (maintainability-check)
 
 -   repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
