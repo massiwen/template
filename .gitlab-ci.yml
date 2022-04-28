@@ -1,0 +1,80 @@
+variables:
+  BASE_IMG_NAME: ${DOCKER_RELEASE}/pyspark-slim-buster
+  BASE_IMG_TAG: 1.0.6
+  RELEASE_VERSION: 0.0.0
+  GITHUB_URL: https://${GITHUB_TOKEN}@githubifc.iad.ca.inet/DataLab/rating_data_pipelines.git
+  NEXUS_URL: https://nexus-s1-prod.ai.intactfc.cloud/repository/python-intact/
+  PYTEST_N_CORES: 1
+  COVERAGE_DIR: rating_data_pipelines/
+
+before_script:
+  - echo "BASE IMAGE = $BASE_IMG_NAME"
+  - echo "$G_VAI_NEXUS_ROOT_CA" >> /usr/local/share/ca-certificates/additional-ca-cert-bundle.crt
+  - apt update && apt install -y git zip
+
+stages:
+  - pre commit
+  - unit test
+#  - veracode
+#  - release-candidate
+#  - release
+#  - release-branch
+
+pre-commit:
+  tags:
+    - site1-np1
+  stage: pre commit
+  variables:
+    REQUIREMENTS_FILE: "requirements-dev.txt"
+    # Only check for differences in branch commits by default
+    PRE_COMMIT_ARGS: "--from-ref origin/$CI_DEFAULT_BRANCH --to-ref HEAD"
+  before_script:
+    - apt-get -qq -y install git
+    - echo "machine githubifc.iad.ca.inet login ${GITHUB_TOKEN} password x-oauth-basic" > ~/.netrc
+    - git fetch origin
+  image:
+    name: $BASE_IMG_NAME:$BASE_IMG_TAG
+    entrypoint: [ "" ]
+  rules:
+    - if: $PIPELINE_PATH == "UAT" || $PIPELINE_PATH == "PREP" ||  $PIPELINE_PATH == "PROD"
+      variables:
+        # Check everything in release commits
+        PRE_COMMIT_ARGS: "--all-files"
+    - when: on_success
+
+  script:
+    - if [ -f "$REQUIREMENTS_FILE" ]; then pip install -r "$REQUIREMENTS_FILE"; fi
+    - if [ ! -f "$REQUIREMENTS_FILE" ]; then pip install .[dev]; fi
+    - pip install pre-commit
+    - pre-commit install
+    # Only run for files that have changed in the branch
+    - echo Running pre-commit run $PRE_COMMIT_ARGS
+    - pre-commit run $PRE_COMMIT_ARGS
+
+
+python-unit-test:
+  tags:
+    - site1-np1
+  stage: unit test
+  image:
+    name: $BASE_IMG_NAME:$BASE_IMG_TAG
+    entrypoint: [""]
+  variables:
+    REQUIREMENTS_FILE: "requirements-dev.txt"
+    PYTEST_N_CORES: 1
+  script:
+    - if [ -f "$REQUIREMENTS_FILE" ]; then pip install -r "$REQUIREMENTS_FILE"; fi
+    - if [ ! -f "$REQUIREMENTS_FILE" ]; then pip install .[dev]; fi
+    - pip install pytest testfixtures coverage-badge pytest-xdist pytest-forked pytest-mock pytest-cov
+    - pytest -n $PYTEST_N_CORES --cov=${COVERAGE_DIR} --cov-report html:unit_test_summary/coverage_html --cov-report xml:unit_test_summary/coverage.xml --junitxml=unit_test_summary/junit-summary.xml # --cov-fail-under=80 should be defined in .coveragerc
+    - coverage report
+    - coverage-badge -o unit_test_summary/coverage.svg
+  artifacts:
+    paths:
+      - unit_test_summary/junit-summary.xml
+      - unit_test_summary/coverage_html/*
+      - unit_test_summary/coverage.xml
+      - unit_test_summary/coverage.svg
+    reports:
+      junit: unit_test_summary/junit-summary.xml
+      cobertura: unit_test_summary/coverage.xml
