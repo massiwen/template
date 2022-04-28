@@ -1,0 +1,9 @@
+# .coveragerc to control coverage.py
+[run]
+# measure branch coverage in addition to statement coverage
+branch = True
+
+[report]
+# if the total coverage measurement is under this value, then exit with a status code of 2.
+fail_under = 62
+
